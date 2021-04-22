@@ -5,6 +5,11 @@ import networkBridge from './network-bridge';
 import { CLOSE_CODES } from './constants';
 import logger from './helpers/logger';
 import { createEvent, createMessageEvent, createCloseEvent } from './event/factory';
+import proxyFactory from './helpers/proxy-factory';
+
+function randStr() {
+  return Math.random().toString().slice(2);
+}
 
 /*
  * The socket-io class is designed to mimick the real API as closely as possible.
@@ -18,6 +23,7 @@ class SocketIO extends EventTarget {
   constructor(url = 'socket.io', protocol = '') {
     super();
 
+    this.id = randStr();
     this.binaryType = 'blob';
     const urlRecord = new URL(url);
 
@@ -43,8 +49,10 @@ class SocketIO extends EventTarget {
     delay(function delayCallback() {
       if (server) {
         this.readyState = SocketIO.OPEN;
-        server.dispatchEvent(createEvent({ type: 'connection' }), server, this);
-        server.dispatchEvent(createEvent({ type: 'connect' }), server, this); // alias
+
+        const proxy = proxyFactory(this);
+        server.dispatchEvent(createEvent({ type: 'connection' }), proxy);
+        server.dispatchEvent(createEvent({ type: 'connect' }), proxy); // alias
         this.dispatchEvent(createEvent({ type: 'connect', target: this }));
       } else {
         this.readyState = SocketIO.CLOSED;
@@ -97,9 +105,9 @@ class SocketIO extends EventTarget {
     );
 
     if (server) {
-      server.dispatchEvent(
+      this.dispatchEvent(
         createCloseEvent({
-          type: 'disconnect',
+          type: 'server::disconnect',
           target: this,
           code: CLOSE_CODES.CLOSE_NORMAL
         }),
@@ -128,7 +136,7 @@ class SocketIO extends EventTarget {
     }
 
     const messageEvent = createMessageEvent({
-      type: event,
+      type: `server::${event}`,
       origin: this.url,
       data
     });
@@ -136,7 +144,7 @@ class SocketIO extends EventTarget {
     const server = networkBridge.serverLookup(this.url);
 
     if (server) {
-      server.dispatchEvent(messageEvent, ...data);
+      this.dispatchEvent(messageEvent, ...data);
     }
 
     return this;

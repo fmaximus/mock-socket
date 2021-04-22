@@ -15,6 +15,18 @@ export default function proxyFactory(target) {
         };
       }
 
+      if (prop === 'emit') {
+        return function emit(event, ...data) {
+          const messageEvent = createMessageEvent({
+            type: event,
+            origin: this.url,
+            data
+          });
+
+          target.dispatchEvent(messageEvent, ...data);
+        };
+      }
+
       if (prop === 'send') {
         return function send(data) {
           data = normalizeSendData(data);
@@ -33,6 +45,7 @@ export default function proxyFactory(target) {
       if (prop === 'on') {
         return function onWrapper(type, cb) {
           target.addEventListener(`server::${type}`, cb);
+          return obj;
         };
       }
 

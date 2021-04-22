@@ -3,6 +3,8 @@
 // Definitions by: Travis Hoover <https://github.com/thoov/mock-socket>
 
 declare module 'mock-socket' {
+  type Room = string;
+
   class EventTarget {
     listeners: any;
     addEventListener(type: string, listener: EventListenerOrEventListenerObject | null, options?: boolean | AddEventListenerOptions): void;
@@ -116,4 +118,60 @@ declare module 'mock-socket' {
     verifyClient?: () => boolean;
     selectProtocol?: (protocols: string[]) => string | null;
   }
+
+    export interface Handshake {
+        /**
+         * The headers sent as part of the handshake
+         */
+        headers: object;
+        /**
+         * The date of creation (as string)
+         */
+        time: string;
+        /**
+         * The ip of the client
+         */
+        address: string;
+        /**
+         * Whether the connection is cross-domain
+         */
+        xdomain: boolean;
+        /**
+         * Whether the connection is secure
+         */
+        secure: boolean;
+        /**
+         * The date of creation (as unix timestamp)
+         */
+        issued: number;
+        /**
+         * The request URL string
+         */
+        url: string;
+        /**
+         * The query object
+         */
+        query: { [key:string]: string };
+        /**
+         * The auth object
+         */
+        auth: object;
+    }
+
+    class SocketIO extends EventTarget {
+      id: string
+      handshake: Handshake;
+      constructor(url?: string, protocol?: string)
+      close(): this
+      disconnect(): this
+      emit(ev: string, ...args: any[]): this;
+      send(...args: any[]): this;
+      on(event: string | symbol, listener: (...args: any[]) => void): this;
+      off(event: string | symbol, listener: (...args: any[]) => void): this;
+      join(rooms: Room | Array<Room>): Promise<void> | void;
+      leave(room: string): Promise<void> | void;
+      to(name: Room): this;
+      in(name: Room): this;
+      get broadcast(): this;
+    }
 }
