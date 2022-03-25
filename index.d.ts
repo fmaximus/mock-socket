@@ -120,22 +120,6 @@ declare module 'mock-socket' {
     normalizeSendData?: boolean
   }
 
-    class SocketIO extends EventTarget {
-      id: string
-      handshake: Handshake;
-      constructor(url?: string, protocol?: string)
-      close(): this
-      disconnect(): this
-      emit(ev: string, ...args: any[]): this;
-      send(...args: any[]): this;
-      on(event: string | symbol, listener: (...args: any[]) => void): this;
-      off(event: string | symbol, listener: (...args: any[]) => void): this;
-      join(rooms: Room | Array<Room>): Promise<void> | void;
-      leave(room: string): Promise<void> | void;
-      to(name: Room): this;
-      in(name: Room): this;
-      get broadcast(): this;
-    }
   export interface Handshake {
     /**
      * The headers sent as part of the handshake
@@ -173,5 +157,42 @@ declare module 'mock-socket' {
      * The auth object
      */
     auth: object;
+  }
+
+  export interface EventsMap {
+    [event: string]: any;
+  }
+
+  export interface DefaultEventsMap {
+    [event: string]: (...args: any[]) => void;
+  }
+
+  type FallbackToUntypedListener<T> = [T] extends [never] ? (...args: any[]) => void : T;
+  export type EventNames<Map extends EventsMap> = keyof Map & (string | symbol);
+  export type EventParams<Map extends EventsMap, Ev extends EventNames<Map>> = Parameters<Map[Ev]>;
+  export type ReservedOrUserEventNames<ReservedEventsMap extends EventsMap, UserEvents extends EventsMap> = EventNames<ReservedEventsMap> | EventNames<UserEvents>;
+  export type ReservedOrUserListener<ReservedEvents extends EventsMap, UserEvents extends EventsMap, Ev extends ReservedOrUserEventNames<ReservedEvents, UserEvents>> = FallbackToUntypedListener<Ev extends EventNames<ReservedEvents> ? ReservedEvents[Ev] : Ev extends EventNames<UserEvents> ? UserEvents[Ev] : never>;
+
+  interface SocketReservedEvents {
+    connect: () => void;
+    connect_error: (err: Error) => void;
+    disconnect: () => void;
+  }
+
+  class SocketIO<ListenEvents extends EventsMap = DefaultEventsMap, EmitEvents extends EventsMap = ListenEvents> extends EventTarget {
+    id: string
+    handshake: Handshake;
+    constructor(url?: string, protocol?: string)
+    close(): this
+    disconnect(): this
+    emit<Ev extends EventNames<EmitEvents>>(ev: Ev, ...args: EventParams<EmitEvents, Ev>): this;
+    send(...args: any[]): this;
+    on<Ev extends ReservedOrUserEventNames<SocketReservedEvents, ListenEvents>>(ev: Ev, listener: ReservedOrUserListener<SocketReservedEvents, ListenEvents, Ev>): this;
+    off<Ev extends ReservedOrUserEventNames<SocketReservedEvents, ListenEvents>>(ev: Ev, listener: ReservedOrUserListener<SocketReservedEvents, ListenEvents, Ev>): this;
+    join(rooms: Room | Array<Room>): Promise<void> | void;
+    leave(room: string): Promise<void> | void;
+    to(name: Room): this;
+    in(name: Room): this;
+    get broadcast(): this;
   }
 }
