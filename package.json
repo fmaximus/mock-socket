@@ -14,7 +14,7 @@
   "scripts": {
     "build": "rm -rf dist && rollup -c rollup.config.js",
     "lint": "eslint src tests",
-    "prepublishOnly": "yarn build",
+    "prepare": "yarn build",
     "test": "ava --serial --verbose"
   },
   "repository": {
