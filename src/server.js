@@ -9,6 +9,10 @@ import normalizeSendData from './helpers/normalize-send';
 import { createEvent, createMessageEvent, createCloseEvent } from './event/factory';
 
 class Server extends EventTarget {
+  /**
+   * @param {string} url
+   * @param {ServerOptions} options
+   */
   constructor(url, options = {}) {
     super();
     const urlRecord = new URL(url);
@@ -33,6 +37,10 @@ class Server extends EventTarget {
 
     if (typeof options.selectProtocol === 'undefined') {
       options.selectProtocol = null;
+    }
+
+    if (typeof options.normalizeSendData === 'undefined') {
+      options.normalizeSendData = true;
     }
 
     this.options = options;
@@ -128,8 +136,10 @@ class Server extends EventTarget {
 
     if (typeof options !== 'object' || arguments.length > 3) {
       data = Array.prototype.slice.call(arguments, 1, arguments.length);
-      data = data.map(item => normalizeSendData(item));
-    } else {
+      if (this.options.normalizeSendData) {
+        data = data.map(item => normalizeSendData(item));
+      }
+    } else if (this.options.normalizeSendData) {
       data = normalizeSendData(data);
     }
 

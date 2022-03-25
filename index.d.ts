@@ -114,49 +114,11 @@ declare module 'mock-socket' {
     emit(event: Event, data: any): void;
   }
 
-  interface ServerOptions {
+  export interface ServerOptions {
     verifyClient?: () => boolean;
     selectProtocol?: (protocols: string[]) => string | null;
+    normalizeSendData?: boolean
   }
-
-    export interface Handshake {
-        /**
-         * The headers sent as part of the handshake
-         */
-        headers: object;
-        /**
-         * The date of creation (as string)
-         */
-        time: string;
-        /**
-         * The ip of the client
-         */
-        address: string;
-        /**
-         * Whether the connection is cross-domain
-         */
-        xdomain: boolean;
-        /**
-         * Whether the connection is secure
-         */
-        secure: boolean;
-        /**
-         * The date of creation (as unix timestamp)
-         */
-        issued: number;
-        /**
-         * The request URL string
-         */
-        url: string;
-        /**
-         * The query object
-         */
-        query: { [key:string]: string };
-        /**
-         * The auth object
-         */
-        auth: object;
-    }
 
     class SocketIO extends EventTarget {
       id: string
@@ -174,4 +136,42 @@ declare module 'mock-socket' {
       in(name: Room): this;
       get broadcast(): this;
     }
+  export interface Handshake {
+    /**
+     * The headers sent as part of the handshake
+     */
+    headers: object;
+    /**
+     * The date of creation (as string)
+     */
+    time: string;
+    /**
+     * The ip of the client
+     */
+    address: string;
+    /**
+     * Whether the connection is cross-domain
+     */
+    xdomain: boolean;
+    /**
+     * Whether the connection is secure
+     */
+    secure: boolean;
+    /**
+     * The date of creation (as unix timestamp)
+     */
+    issued: number;
+    /**
+     * The request URL string
+     */
+    url: string;
+    /**
+     * The query object
+     */
+    query: { [key:string]: string };
+    /**
+     * The auth object
+     */
+    auth: object;
+  }
 }
